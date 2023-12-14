@@ -1,28 +1,50 @@
 const net = require('net');
+const express = require('express');
+const http = require('http');
 
-const server = net.createServer((socket) => {
-  console.log('Cliente conectado');
+const app = express();
+const server = http.createServer(app);
+
+// Ruta para servir la interfaz web estática
+app.use(express.static('public'));
+
+// Manejador de conexiones TCP
+server.on('connection', (socket) => {
+  console.log('Cliente TCP conectado');
 
   // Manejar datos entrantes
   socket.on('data', (data) => {
-    const rawData = data.toString('utf-8'); // Convertir los datos a una cadena UTF-8
+    const rawData = data.toString('utf-8');
     console.log('Datos crudos recibidos:', rawData);
-    // Aquí puedes procesar o analizar los datos según tus necesidades
+    
+    // Puedes emitir los datos a través de WebSockets, por ejemplo
+    io.emit('datos', rawData);
   });
 
   // Manejar la desconexión del cliente
   socket.on('end', () => {
-    console.log('Cliente desconectado');
+    console.log('Cliente TCP desconectado');
   });
 
   // Manejar errores de conexión
   socket.on('error', (err) => {
-    console.error('Error de conexión:', err.message);
+    console.error('Error de conexión TCP:', err.message);
   });
 });
 
-const port = 3001; // Puedes cambiar el puerto según tus necesidades
+// Configuración del servidor HTTP
+const portHTTP = 3000;
+server.listen(portHTTP, () => {
+  console.log(`Servidor HTTP escuchando en el puerto ${portHTTP}`);
+});
 
-server.listen(port, () => {
-  console.log(`Servidor TCP escuchando en el puerto ${port}`);
+// Configuración de Socket.IO para la comunicación en tiempo real
+const io = require('socket.io')(server);
+
+// Configuración del servidor TCP
+const portTCP = 3001;
+net.createServer((socket) => {
+  server.emit('connection', socket); // Emitir el evento de conexión al servidor HTTP
+}).listen(portTCP, () => {
+  console.log(`Servidor TCP escuchando en el puerto ${portTCP}`);
 });
