@@ -8,17 +8,23 @@ const server = http.createServer(app);
 // Ruta para servir la interfaz web estática
 app.use(express.static('public'));
 
+// Configuración de Socket.IO para la comunicación en tiempo real
+const io = require('socket.io')(server);
+
 // Manejador de conexiones TCP
 server.on('connection', (socket) => {
   console.log('Cliente TCP conectado');
 
   // Manejar datos entrantes
   socket.on('data', (data) => {
-    const rawData = data.toString('utf-8');
-    console.log('Datos crudos recibidos:', rawData);
+    // Convertir los datos a una cadena hexadecimal
+    const hexData = data.toString('hex').toUpperCase();
     
+    // Mostrar los datos en hexadecimal
+    console.log('Datos en hexadecimal:', hexData);
+
     // Puedes emitir los datos a través de WebSockets, por ejemplo
-    io.emit('datos', rawData);
+    io.emit('datos', hexData);
   });
 
   // Manejar la desconexión del cliente
@@ -37,9 +43,6 @@ const portHTTP = 3000;
 server.listen(portHTTP, () => {
   console.log(`Servidor HTTP escuchando en el puerto ${portHTTP}`);
 });
-
-// Configuración de Socket.IO para la comunicación en tiempo real
-const io = require('socket.io')(server);
 
 // Configuración del servidor TCP
 const portTCP = 3001;
